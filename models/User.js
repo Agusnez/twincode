@@ -14,6 +14,7 @@ const UserSchema = new Schema({
   subject: { type: String, required: true },
   beganStudying: { type: Number, required: true },
   numberOfSubjects: { type: Number, required: true },
+  knownLanguages: { type: String, required: true },
   room: { type: Number },
   token: { type: String },
   socketId: { type: String },

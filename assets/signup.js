@@ -8,17 +8,19 @@ var app = new Vue({
         firstName: "",
         surname: "",
         mail: "",
+        academicMail: "",
         gender: null,
         birthDate: null,
         subject: "",
         beganStudying: null,
         numberOfSubjects: null,
+        knownLanguages: "",
       },
       submitionOk: false,
     };
   },
   methods: {
-    checkForm() {
+    checkForm(e) {
       if (
         app.details.firstName &&
         app.details.surname &&
@@ -27,7 +29,9 @@ var app = new Vue({
         app.details.birthDate &&
         app.details.subject &&
         app.details.beganStudying &&
-        app.details.numberOfSubjects
+        app.details.numberOfSubjects &&
+        app.details.knownLanguages &&
+        app.dateValid()
       ) {
         this.errors = [];
         return this.onSubmit();
@@ -59,23 +63,13 @@ var app = new Vue({
       if (!app.details.numberOfSubjects) {
         this.errors.push("Number of subjects this year required.");
       }
+      if (!app.details.knownLanguages) {
+        this.errors.push("Known languages is required.");
+      }
 
       e.preventDefault();
     },
     onSubmit() {
-      // Because Safari doesn't have input="date"
-      // This check is necesary
-      console.log(new Date(app.details.birthDate));
-      if (
-        !(app.details.birthDate instanceof Date) &&
-        new Date(app.details.birthDate) === "Invalid Date"
-      ) {
-        const dateArray = app.details.birthDate.split("/");
-        app.details.birthDate = new Date(
-          `${dateArray[2]}-${dateArray[1]}-${dateArray[0]}`
-        );
-      }
-
       fetch("/signup", {
         method: "POST",
         body: JSON.stringify(app.details),
@@ -83,10 +77,33 @@ var app = new Vue({
           "Content-Type": "application/json",
         },
       }).then((response) => {
-        if (response.status == 200) {
+        if (response.status === 200) {
           app.submitionOk = true;
+        } else {
+          app.errors.push("There was an error in the request. Check the form.");
         }
       });
+    },
+    dateValid() {
+      // Because <input type="date" /> behaves differently in safari
+      // This check is necesary
+      const date = new Date(app.details.birthDate);
+      if (date == "Invalid Date") {
+        // Safari
+        let dateArray = app.details.birthDate.split("/");
+        app.details.birthDate = new Date(
+          `${dateArray[2]}-${dateArray[1]}-${dateArray[0]}`
+        );
+        console.log(app.details.birthDate);
+      } else {
+        app.details.birthDate = date;
+      }
+
+      if (app.details.birthDate == "Invalid Date") {
+        this.errors.push("Please enter a valid date in your birth date.");
+      }
+
+      return app.details.birthDate != "Invalid Date";
     },
   },
 });

@@ -28,7 +28,7 @@ router.post("/login", (req, res) => {
 });
 
 router.post("/signup", async (req, res) => {
-  const code = Math.floor(Math.random() * 1000 + 1);
+  const code = Math.floor(Math.random() * 1000000 + 1);
 
   const newUser = new User(req.body);
   newUser.code = code;
@@ -47,15 +47,15 @@ router.post("/signup", async (req, res) => {
     });
 
     let info = await transporter.sendMail({
-      from: '"FlockJS Team 👨🏽‍💻" <no-reply@flockjs.com>', // sender address
+      from: '"TwinCode Team 👨🏽‍💻" <no-reply@twincode.com>', // sender address
       to: newUser.mail, // list of receivers
-      subject: "Welcome to FlockJS ✔", // Subject line
-      text: "Welcome to FlockJS", // plain text body
+      subject: "Welcome to TwinCode ✔", // Subject line
+      text: "Welcome to TwinCode", // plain text body
       html: `
-    <h1>Welcome to FlockJS</h1>
+    <h1>Welcome to TwinCode</h1>
     <br/>
     <p>Your code in order to participate in the session is the following: <b>${code}</b></p>
-    <p>But you can click directly <a href="https://flockjs.herokuapp.com/joinSession?code=${code}">here</a> for easy access when the session starts.</p>`, // html body
+    <p>But you can click directly <a href="https://twincode.herokuapp.com/joinSession?code=${code}">here</a> for easy access when the session starts.</p>`, // html body
     });
 
     Logger.monitorLog("Message sent: %s", info.messageId);
