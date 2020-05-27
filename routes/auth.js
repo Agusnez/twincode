@@ -55,6 +55,7 @@ router.post("/signup", async (req, res) => {
     <h1>Welcome to TwinCode</h1>
     <br/>
     <p>Your code in order to participate in the session is the following: <b>${code}</b></p>
+    <p>he experiment is scheduled on thursday June 11th, from 19:00  to 20:00; detailed instructions on how to participate in the experiment will be sent in a further email.</p><br/>
     <p>But you can click directly <a href="https://twincode.herokuapp.com/joinSession?code=${code}">here</a> for easy access when the session starts.</p>`, // html body
     });
 

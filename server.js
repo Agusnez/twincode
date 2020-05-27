@@ -78,7 +78,7 @@ app.get("/joinSession", async (req, res) => {
                 res.sendFile("lobby.html", { root: fileDirectory });
               } else {
                 res.send(
-                  "Session is not active yet. If you think it is an error, contact with your professor."
+                  "Session is not active yet. If you think it is an error, contact with your coordinator."
                 );
               }
             } else {
