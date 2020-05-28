@@ -9,6 +9,7 @@ const UserSchema = new Schema({
   firstName: { type: String, required: true },
   surname: { type: String, required: true },
   mail: { type: String, required: true },
+  academicMail: { type: String },
   gender: { type: String, required: true },
   birthDate: { type: Date, required: true },
   subject: { type: String, required: true },
