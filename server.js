@@ -2,11 +2,14 @@ require("dotenv").config();
 var express = require("express");
 var bodyParser = require("body-parser");
 var cookieParser = require("cookie-parser");
+var cors = require("cors");
 const Logger = require("./logger.js");
 const Session = require("./models/Session.js");
 const User = require("./models/User.js");
 
 var app = express();
+
+app.use(cors());
 
 app.use("/static", express.static("static"));
 app.use("/assets", express.static("assets"));
@@ -17,8 +20,10 @@ const fileDirectory = __dirname + "/assets/";
 
 const auth = require("./routes/auth");
 const tests = require("./routes/tests.js");
+const admin = require("./routes/admin");
 app.use(auth);
 app.use(tests);
+app.use(admin);
 
 app.get("/", (req, res) => {
   res.sendFile("login.html", { root: fileDirectory });
