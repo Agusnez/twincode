@@ -55,4 +55,27 @@ router.get("/sessions", async (req, res) => {
   }
 });
 
+router.post("/resetSession", async (req, res) => {
+  const adminSecret = req.headers.authorization;
+
+  if (adminSecret === process.env.ADMIN_SECRET) {
+    await Session.collection.updateOne(
+      {
+        name: req.body.session,
+        environment: process.env.NODE_ENV,
+      },
+      { $set: { testCounter: 0, exerciseCounter: -1 } },
+      { multi: false, safe: true }
+    );
+    const users = await User.collection.updateMany(
+      { subject: req.body.session, environment: process.env.NODE_ENV },
+      { $unset: { token: true, socketId: true, room: true } },
+      { multi: true, safe: true }
+    );
+    res.send(users);
+  } else {
+    res.sendStatus(401);
+  }
+});
+
 module.exports = router;

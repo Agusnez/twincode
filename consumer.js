@@ -8,6 +8,8 @@ const Test = require("./models/Test.js");
 
 let uids = new Map();
 let rooms = new Map();
+let sessions = new Map();
+let tokens = new Map();
 
 function toJSON(obj) {
   return JSON.stringify(obj, null, 2);
@@ -228,8 +230,10 @@ async function executeSession(sessionName, io) {
           data: {
             maxTime: exercise.time,
             exerciseDescription: exercise.description,
+            exerciseType: exercise.type,
           },
         });
+        sessions.set(session.name, exercise.type);
         timer = exercise.time;
       }
       session.exerciseCounter++;
@@ -294,10 +298,13 @@ module.exports = {
           socket.join(user.subject);
           await user.save();
         }
+        tokens.set(pack, user.subject);
       });
 
       socket.on("text", (pack) => {
-        io.sockets.emit("text", pack);
+        if (sessions.get(tokens.get(pack.token)) == "PAIR") {
+          io.sockets.emit("text", pack);
+        }
         lastText = pack.data;
         var uid = uids.get(socket.id);
         Logger.log(
@@ -315,7 +322,9 @@ module.exports = {
       });
 
       socket.on("msg", (pack) => {
-        io.sockets.emit("msg", pack);
+        if (sessions.get(tokens.get(pack.token)) == "PAIR") {
+          io.sockets.emit("msg", pack);
+        }
         var uid = uids.get(socket.id);
         Logger.log(
           "Msg",
@@ -394,7 +403,7 @@ module.exports = {
           uid: pack.uid,
           sid: socket.id,
         });
-        rooms.set(pack.rid, room);
+        room.session = rooms.set(pack.rid, room);
 
         Logger.log(
           "Registry",

@@ -18,6 +18,7 @@ var app = new Vue({
       lastReceived: "",
       exerciseDescription: "Please, wait until the exercise loads...",
       exerciseLoaded: false,
+      exerciseType: "PAIR",
       testDescription: "",
       finished: false,
       starting: true,
@@ -78,6 +79,7 @@ var app = new Vue({
       this.$refs.progressBar.classList.remove("bg-red-500");
       this.$refs.progressBar.classList.add("bg-green-500");
       this.exerciseDescription = pack.data.exerciseDescription;
+      this.exerciseType = pack.data.exerciseType;
     },
     reconnect() {
       this.$socket.client.emit("clientReconnection", localStorage.token);
@@ -127,10 +129,12 @@ var app = new Vue({
   },
   methods: {
     sendMessage() {
-      this.newMessage(this.myMessage, true);
-      this.$socket.client.emit("msg", this.pack(this.myMessage));
+      if (this.exerciseType == "PAIR") {
+        this.newMessage(this.myMessage, true);
+        this.$socket.client.emit("msg", this.pack(this.myMessage));
 
-      this.myMessage = "";
+        this.myMessage = "";
+      }
     },
     newMessage(msg, mine) {
       const MessageClass = Vue.extend(Message);
