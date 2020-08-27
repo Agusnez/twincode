@@ -4,6 +4,7 @@ const router = express.Router();
 const User = require("../models/User.js");
 const nodemailer = require("nodemailer");
 const Logger = require("../logger.js");
+const Session = require("../models/Session.js");
 
 router.post("/login", (req, res) => {
   let responseBody = {
@@ -33,6 +34,17 @@ router.post("/signup", async (req, res) => {
   const newUser = new User(req.body);
   newUser.code = code;
 
+  const session = await Session.findOne({
+    name: sessionName,
+    environment: process.env.NODE_ENV,
+  });
+
+  const bodyResponse = {
+    registrationText:
+      session.registrationText ||
+      "You will receive now an email with the next steps.",
+  };
+
   try {
     await newUser.save();
 
@@ -60,7 +72,7 @@ router.post("/signup", async (req, res) => {
     });
 
     Logger.monitorLog("Message sent: %s", info.messageId);
-    res.sendStatus(200);
+    res.send(bodyResponse);
   } catch (e) {
     Logger.monitorLog(e);
     if (e.name == "ValidationError") {

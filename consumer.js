@@ -184,6 +184,9 @@ async function executeSession(sessionName, io) {
     environment: process.env.NODE_ENV,
   });
 
+  session.running = true;
+  session.save();
+
   const tests = await Test.find({
     session: session.name,
     environment: process.env.NODE_ENV,
@@ -239,6 +242,15 @@ async function executeSession(sessionName, io) {
       session.exerciseCounter++;
       session.save();
     }
+
+    Session.findOne({
+      name: sessionName,
+      environment: process.env.NODE_ENV,
+    }).then((currentSession) => {
+      if (!currentSession.running) {
+        clearInterval(interval);
+      }
+    });
   }, 1000);
 }
 

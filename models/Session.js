@@ -9,6 +9,7 @@ const SessionSchema = new Schema({
   tokenPairing: { type: Boolean },
   testCounter: { type: Number },
   exerciseCounter: { type: Number },
+  running: { type: Boolean },
 });
 
 module.exports = mongoose.model("Session", SessionSchema);

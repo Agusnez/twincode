@@ -64,7 +64,7 @@ router.post("/resetSession", async (req, res) => {
         name: req.body.session,
         environment: process.env.NODE_ENV,
       },
-      { $set: { testCounter: 0, exerciseCounter: -1 } },
+      { $set: { testCounter: 0, exerciseCounter: -1, running: false } },
       { multi: false, safe: true }
     );
     const users = await User.collection.updateMany(

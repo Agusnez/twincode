@@ -44,7 +44,7 @@ app.get("/signup", (req, res) => {
 app.post("/registerUser", async (req, res) => {
   try {
     const user = await User.findOne({
-      code: req.cookies.code,
+      code: req.body.code,
       environment: process.env.NODE_ENV,
     });
     const session = await Session.findOne({
@@ -79,8 +79,7 @@ app.get("/joinSession", async (req, res) => {
           .then((session) => {
             if (session) {
               if (session.active) {
-                res.header({ "Set-Cookie": `code=${req.query.code}` });
-                res.sendFile("lobby.html", { root: fileDirectory });
+                res.send({ code: req.query.code });
               } else {
                 res.send(
                   "Session is not active yet. If you think it is an error, contact with your coordinator."
