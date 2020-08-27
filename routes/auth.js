@@ -59,7 +59,7 @@ router.post("/signup", async (req, res) => {
     });
 
     let info = await transporter.sendMail({
-      from: '"TwinCode Team 👨🏽‍💻" <no-reply@twincode.com>', // sender address
+      from: '"TwinCode Team 👩🏼‍💻👨🏽‍💻" <no-reply@twincode.com>', // sender address
       to: newUser.mail, // list of receivers
       subject: "Welcome to TwinCode ✔", // Subject line
       text: "Welcome to TwinCode", // plain text body
@@ -68,7 +68,7 @@ router.post("/signup", async (req, res) => {
     <br/>
     <p>Your code in order to participate in the session is the following: <b>${code}</b></p>
     <p>Detailed instructions on how to participate in the experiment will be sent in a further email.</p><br/>
-    <p>But you can click directly <a href="https://twincode.herokuapp.com/joinSession?code=${code}">here</a> for easy access when the session starts.</p>`, // html body
+    <p>But you can click directly <a href="https://twincode.netlify.app/?code=${code}">here</a> for easy access when the session starts.</p>`, // html body
     });
 
     Logger.monitorLog("Message sent: %s", info.messageId);
