@@ -35,7 +35,7 @@ router.post("/signup", async (req, res) => {
   newUser.code = code;
 
   const session = await Session.findOne({
-    name: sessionName,
+    name: req.body.subject,
     environment: process.env.NODE_ENV,
   });
 
