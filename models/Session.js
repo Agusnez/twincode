@@ -11,6 +11,7 @@ const SessionSchema = new Schema({
   exerciseCounter: { type: Number },
   running: { type: Boolean },
   registrationText: { type: String },
+  finishMessage: { type: String },
 });
 
 module.exports = mongoose.model("Session", SessionSchema);

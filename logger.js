@@ -3,13 +3,15 @@ const db = require("./db.js");
 const Log = require("./models/Log.js");
 
 class Logger {
-  static log(category, userId, msg) {
-    console.log(msg);
+  static log(category, userId, payload, exercise, test) {
+    console.log(payload);
     let log = Log({
       environment: process.env.NODE_ENV,
       category: category,
       createdBy: userId,
-      message: msg,
+      payload: payload,
+      exercise: exercise,
+      test: test,
     });
     log.save((err) => {
       if (err) {

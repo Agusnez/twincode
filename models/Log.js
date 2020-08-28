@@ -6,7 +6,9 @@ const LogSchema = new Schema({
   environment: { type: String, required: true },
   category: { type: String, required: true },
   createdBy: { type: String, required: true },
-  message: { type: String, required: true },
+  payload: { type: String, required: true },
+  exercise: { type: Number },
+  test: { type: Number },
 });
 
 LogSchema.index({ createdBy: 1, category: 1 });

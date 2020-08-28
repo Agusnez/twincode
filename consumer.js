@@ -10,6 +10,8 @@ let uids = new Map();
 let rooms = new Map();
 let sessions = new Map();
 let tokens = new Map();
+let connectedUsers = new Map();
+let userToSocketID = new Map();
 
 function toJSON(obj) {
   return JSON.stringify(obj, null, 2);
@@ -76,6 +78,9 @@ async function pairing(session, io) {
         io.to(pairedUser.socketId).emit("sessionStart", {
           room: session.name + pairedUser.room,
         });
+
+        connectedUsers.set(user.code, pairedUser.code);
+        connectedUsers.set(pairedUser.code, user.code);
       } else {
         const anyOtherUser = await User.findOne({
           subject: session.name,
@@ -97,6 +102,8 @@ async function pairing(session, io) {
           }
           await user.save();
           await anyOtherUser.save();
+          connectedUsers.set(user.code, anyOtherUser.code);
+          connectedUsers.set(anyOtherUser.code, user.code);
 
           io.to(user.socketId).emit("sessionStart", {
             room: session.name + user.room,
@@ -236,7 +243,10 @@ async function executeSession(sessionName, io) {
             exerciseType: exercise.type,
           },
         });
-        sessions.set(session.name, exercise.type);
+        sessions.set(session.name, {
+          session: session,
+          exerciseType: exercise.type,
+        });
         timer = exercise.time;
       }
       session.exerciseCounter++;
@@ -274,6 +284,7 @@ module.exports = {
         });
         console.log(session);
         if (session && session.active) {
+          userToSocketID.set(user.code, socket.id);
           user.socketId = socket.id; // TODO: Will be placed outside this function at some point
           await user.save();
 
@@ -305,6 +316,7 @@ module.exports = {
           environment: process.env.NODE_ENV,
         });
         if (user) {
+          userToSocketID.set(user.code, socket.id);
           user.socketId = socket.id;
           console.log("Reconnecting in session " + user.subject);
           socket.join(user.subject);
@@ -313,42 +325,39 @@ module.exports = {
         tokens.set(pack, user.subject);
       });
 
-      socket.on("text", (pack) => {
-        if (sessions.get(tokens.get(pack.token)) == "PAIR") {
-          io.sockets.emit("text", pack);
+      socket.on("cursorActivity", (data) => {
+        io.to(connectedUsers.get(socket.id)).emit("cursorActivity", data);
+      });
+
+      socket.on("updateCode", (pack) => {
+        if (sessions.get(tokens.get(pack.token)).exerciseType == "PAIR") {
+          io.to(userToSocketID.get(connectedUsers.get(pack.token))).emit(
+            "refreshCode",
+            pack.data
+          );
         }
         lastText = pack.data;
         var uid = uids.get(socket.id);
         Logger.log(
-          "Text",
+          "Code",
           pack.token,
-          "New text event by " +
-            socket.id +
-            "(" +
-            uid +
-            ") in room <" +
-            pack.rid +
-            ">:" +
-            toJSON(pack)
+          pack.data,
+          sessions.get(tokens.get(pack.token)).session.exerciseCounter,
+          sessions.get(tokens.get(pack.token)).session.testCounter
         );
       });
 
       socket.on("msg", (pack) => {
-        if (sessions.get(tokens.get(pack.token)) == "PAIR") {
+        if (sessions.get(tokens.get(pack.token)).exerciseType == "PAIR") {
           io.sockets.emit("msg", pack);
         }
         var uid = uids.get(socket.id);
         Logger.log(
-          "Msg",
+          "Chat",
           pack.token,
-          "New msg event by " +
-            socket.id +
-            "(" +
-            uid +
-            ") in room <" +
-            pack.rid +
-            ">:" +
-            toJSON(pack)
+          pack.data,
+          sessions.get(tokens.get(pack.token)).session.exerciseCounter,
+          sessions.get(tokens.get(pack.token)).session.testCounter
         );
       });
 

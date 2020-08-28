@@ -87,11 +87,16 @@ router.post("/verify", async (req, res) => {
       console.log("Validating exercise " + exercise.description);
       const solution = exercise.solution;
 
-      if (solution === req.body.solution) {
-        res.send({ result: true });
-      } else {
-        res.send({ result: false });
-      }
+      const isCorrect = solution === req.body.solution;
+
+      Logger.log(
+        "Verify",
+        user.code,
+        isCorrect,
+        session.exerciseCounter,
+        session.testCounter
+      );
+      res.send({ result: isCorrect });
     } else {
       res.sendStatus(404);
     }

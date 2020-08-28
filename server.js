@@ -114,4 +114,24 @@ app.get("/rooms/:mode/:rid/", (req, res) => {
   );
 });
 
+app.get("/finishMessage", async (req, res) => {
+  try {
+    const user = await User.findOne({
+      code: req.query.code,
+      environment: process.env.NODE_ENV,
+    });
+    const session = await Session.findOne({
+      name: user.subject,
+      environment: process.env.NODE_ENV,
+    });
+    if (session) {
+      res.send({ finishMessage: session.finishMessage });
+    } else {
+      res.sendStatus(404);
+    }
+  } catch (err) {
+    res.sendStatus(500);
+  }
+});
+
 module.exports = app;
