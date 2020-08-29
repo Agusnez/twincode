@@ -9,6 +9,7 @@ const TestSchema = new Schema({
   activeSince: { type: Date },
   orderNumber: { type: Number },
   time: { type: Number },
+  peerChange: { type: Boolean },
 });
 
 module.exports = mongoose.model("Test", TestSchema);

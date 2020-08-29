@@ -204,7 +204,10 @@ async function executeSession(sessionName, io) {
   let timer = 0;
   let maxExercises = tests[session.testCounter].exercises.length;
   io.to(sessionName).emit("loadTest", {
-    data: { testDescription: tests[0].description },
+    data: {
+      testDescription: tests[0].description,
+      peerChange: tests[0].peerChange,
+    },
   });
   const interval = setInterval(function () {
     if (session.testCounter == numTests) {
@@ -226,6 +229,7 @@ async function executeSession(sessionName, io) {
       io.to(sessionName).emit("loadTest", {
         data: {
           testDescription: tests[session.testCounter].description,
+          peerChange: tests[session.testCounter].peerChange,
         },
       });
       timer = tests[session.testCounter].time;
