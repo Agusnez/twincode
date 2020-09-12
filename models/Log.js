@@ -6,7 +6,7 @@ const LogSchema = new Schema({
   environment: { type: String, required: true },
   category: { type: String, required: true },
   createdBy: { type: String, required: true },
-  payload: { type: String, required: true },
+  payload: { type: Object },
   exercise: { type: Number },
   test: { type: Number },
 });
