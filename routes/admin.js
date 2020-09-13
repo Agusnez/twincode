@@ -207,6 +207,43 @@ router.post("/sessions", (req, res) => {
   }
 });
 
+router.post("/tests", (req, res) => {
+  const adminSecret = req.headers.authorization;
+
+  if (adminSecret === process.env.ADMIN_SECRET) {
+    try {
+      let newTest = new Test();
+      newTest.environment = process.env.NODE_ENV;
+      newTest.session = req.body.session;
+      newTest.name = req.body.name;
+      newTest.description = req.body.description;
+      newTest.orderNumber = req.body.orderNumber;
+      newTest.time = req.body.time;
+      newTest.peerChange = req.body.peerChange;
+      newTest.exercises = req.body.exercises;
+      newTest
+        .save()
+        .then((test) => {
+          res.send(test);
+        })
+        .catch((error) => {
+          let errorMsg = "Something bad happened...";
+          if (error.code === 11000) {
+            errorMsg = "You should choose another name that is not duplicated.";
+          } else if (error.message) {
+            errorMsg = error.message;
+          }
+          res.status(400).send({ errorMsg });
+        });
+    } catch (e) {
+      console.log(e);
+      res.sendStatus(500);
+    }
+  } else {
+    res.sendStatus(401);
+  }
+});
+
 router.post("/resetSession", async (req, res) => {
   const adminSecret = req.headers.authorization;
 
@@ -225,6 +262,137 @@ router.post("/resetSession", async (req, res) => {
       { multi: true, safe: true }
     );
     res.send(users);
+  } else {
+    res.sendStatus(401);
+  }
+});
+
+router.put("/tests/:sessionName", (req, res) => {
+  const adminSecret = req.headers.authorization;
+
+  if (adminSecret === process.env.ADMIN_SECRET) {
+    try {
+      Test.findOneAndUpdate(
+        {
+          environment: process.env.NODE_ENV,
+          session: req.params.sessionName,
+          orderNumber: req.body.orderNumber,
+        },
+        req.body
+      )
+        .then((test) => {
+          res.send(test);
+        })
+        .catch((error) => {
+          let errorMsg = "Something bad happened...";
+          if (error.code === 11000) {
+            errorMsg = "You should choose another name that is not duplicated.";
+          } else if (error.message) {
+            errorMsg = error.message;
+          }
+          res.status(400).send({ errorMsg });
+        });
+    } catch (e) {
+      console.log(e);
+      res.sendStatus(500);
+    }
+  } else {
+    res.sendStatus(401);
+  }
+});
+
+router.put("/sessions/:sessionName/toggleActivation", (req, res) => {
+  const adminSecret = req.headers.authorization;
+
+  if (adminSecret === process.env.ADMIN_SECRET) {
+    try {
+      Session.findOne({
+        environment: process.env.NODE_ENV,
+        name: req.params.sessionName,
+      })
+        .then((session) => {
+          session.active = !session.active;
+          session
+            .save()
+            .then((ret) => {
+              res.send(session);
+            })
+            .catch((error) => {
+              let errorMsg = "Something bad happened...";
+              if (error.message) {
+                errorMsg = error.message;
+              }
+              res.status(500).send({ errorMsg });
+            });
+        })
+        .catch((error) => {
+          let errorMsg = "Something bad happened...";
+          if (error.message) {
+            errorMsg = error.message;
+          }
+          res.status(400).send({ errorMsg });
+        });
+    } catch (e) {
+      console.log(e);
+      res.sendStatus(500);
+    }
+  } else {
+    res.sendStatus(401);
+  }
+});
+
+router.delete("/tests/:sessionName/:orderNumber", (req, res) => {
+  const adminSecret = req.headers.authorization;
+
+  if (adminSecret === process.env.ADMIN_SECRET) {
+    try {
+      Test.findOneAndRemove({
+        environment: process.env.NODE_ENV,
+        session: req.params.sessionName,
+        orderNumber: req.params.orderNumber,
+      })
+        .then((response) => {
+          res.send(response);
+        })
+        .catch((error) => {
+          let errorMsg = "Something bad happened...";
+          if (error.message) {
+            errorMsg = error.message;
+          }
+          res.status(400).send({ errorMsg });
+        });
+    } catch (e) {
+      console.log(e);
+      res.sendStatus(500);
+    }
+  } else {
+    res.sendStatus(401);
+  }
+});
+
+router.delete("/sessions/:sessionName", (req, res) => {
+  const adminSecret = req.headers.authorization;
+
+  if (adminSecret === process.env.ADMIN_SECRET) {
+    try {
+      Session.findOneAndRemove({
+        environment: process.env.NODE_ENV,
+        name: req.params.sessionName,
+      })
+        .then((response) => {
+          res.send(response);
+        })
+        .catch((error) => {
+          let errorMsg = "Something bad happened...";
+          if (error.message) {
+            errorMsg = error.message;
+          }
+          res.status(400).send({ errorMsg });
+        });
+    } catch (e) {
+      console.log(e);
+      res.sendStatus(500);
+    }
   } else {
     res.sendStatus(401);
   }

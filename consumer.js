@@ -197,7 +197,7 @@ async function executeSession(sessionName, io) {
   const tests = await Test.find({
     session: session.name,
     environment: process.env.NODE_ENV,
-  });
+  }).sort({ orderNumber: 1 });
 
   const numTests = tests.length;
 
