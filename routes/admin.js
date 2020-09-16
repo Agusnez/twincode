@@ -95,7 +95,7 @@ router.get("/participants/:sessionName", (req, res) => {
           environment: process.env.NODE_ENV,
           subject: req.params.sessionName,
         },
-        { code: 1, firstName: 1, mail: 1, _id: 0 }
+        { code: 1, firstName: 1, mail: 1, room: 1, _id: 0 }
       )
         .then((users) => {
           if (users.length > 0) {
@@ -105,6 +105,7 @@ router.get("/participants/:sessionName", (req, res) => {
                 code: user.code,
                 firstName: user.firstName,
                 mail: user.mail,
+                room: user.room,
               });
             });
             res.send(orderedUsers);
@@ -158,6 +159,37 @@ router.get("/tests/:sessionName", (req, res) => {
           console.log(error);
           res.sendStatus(500);
         });
+    } catch (e) {
+      console.log(e);
+      res.sendStatus(500);
+    }
+  } else {
+    res.sendStatus(401);
+  }
+});
+
+router.get("/sessions/:sessionName/:type", async (req, res) => {
+  const adminSecret = req.headers.authorization;
+
+  if (adminSecret === process.env.ADMIN_SECRET) {
+    try {
+      const users = await User.find({
+        environment: process.env.NODE_ENV,
+        subject: req.params.sessionName,
+      });
+      let userOrdered = [];
+      const actions = users.map(async (user) => {
+        let data = await getTotalMessagesFromUser(user.code, req.params.type);
+        if (userOrdered[user.room]) {
+          userOrdered[user.room].push({ name: user.code, data });
+        } else {
+          userOrdered[user.room] = [{ name: user.code, data }];
+        }
+      });
+      const results = Promise.all(actions);
+      results.then(() => {
+        res.send(userOrdered);
+      });
     } catch (e) {
       console.log(e);
       res.sendStatus(500);
@@ -399,3 +431,142 @@ router.delete("/sessions/:sessionName", (req, res) => {
 });
 
 module.exports = router;
+
+// Auxiliary functions
+
+function getTotalMessages(test, exercise, userArray) {
+  const actions = userArray.map((users) => {
+    return Log.aggregate([
+      {
+        $match: {
+          environment: process.env.NODE_ENV,
+          category: "Chat",
+          test,
+          exercise,
+          createdBy: { $in: users },
+        },
+      },
+      {
+        $group: {
+          _id: "$createdBy",
+          totalMessages: {
+            $sum: 1,
+          },
+        },
+      },
+    ]).sort({ _id: -1 });
+  });
+  let results = Promise.all(actions);
+  return results;
+}
+
+function getTestsFromSession(sessionName) {
+  return Test.find({
+    environment: process.env.NODE_ENV,
+    session: sessionName,
+  })
+    .sort({ orderNumber: 1 })
+    .then((tests) => {
+      const exercisesForEachTest = [];
+      tests.forEach((test, index) => {
+        exercisesForEachTest[index] = test.exercises.length;
+      });
+      return exercisesForEachTest;
+    });
+}
+
+function getTotalMessages(user, test, exercise, type) {
+  let matchObj = {};
+  if (type == "deletions") {
+    matchObj = {
+      environment: process.env.NODE_ENV,
+      exercise: exercise,
+      category: "Code",
+      "payload.change.origin": "+delete",
+      test: test,
+      createdBy: user,
+    };
+  } else if (type == "inputs") {
+    matchObj = {
+      environment: process.env.NODE_ENV,
+      category: "Code",
+      exercise: exercise,
+      test: test,
+      "payload.change.origin": "+input",
+      createdBy: user,
+    };
+  } else if (type == "messages") {
+    matchObj = {
+      environment: process.env.NODE_ENV,
+      category: "Chat",
+      exercise: exercise,
+      test: test,
+      createdBy: user,
+    };
+  } else if (type == "wrongs") {
+    matchObj = {
+      environment: process.env.NODE_ENV,
+      category: "Verify",
+      exercise: exercise,
+      test: test,
+      payload: false,
+      createdBy: user,
+    };
+  } else if (type == "rights") {
+    matchObj = {
+      environment: process.env.NODE_ENV,
+      category: "Verify",
+      exercise: exercise,
+      test: test,
+      payload: true,
+      createdBy: user,
+    };
+  }
+  return Log.aggregate([
+    {
+      $match: matchObj,
+    },
+    {
+      $group: {
+        _id: "$createdBy",
+        messages: {
+          $sum: 1,
+        },
+      },
+    },
+  ]).then((result) => {
+    if (result.length == 0) {
+      return 0;
+    } else {
+      return result[0].messages;
+    }
+  });
+}
+
+async function getTotalMessagesFromUser(userCode, type) {
+  try {
+    const user = await User.findOne({
+      environment: process.env.NODE_ENV,
+      code: userCode,
+    });
+    if (user) {
+      const exercisesForEachTest = await getTestsFromSession(user.subject);
+      let report = {
+        name: user.code,
+        data: [],
+      };
+      let promises = [];
+      exercisesForEachTest.map((exercises, test) => {
+        for (let i = 1; i <= exercises; i++) {
+          promises.push(getTotalMessages(user.code, test, i, type));
+        }
+      });
+      const results = Promise.all(promises);
+      return results;
+    } else {
+      return {};
+    }
+  } catch (e) {
+    console.log(e);
+  }
+}
