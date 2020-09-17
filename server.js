@@ -10,6 +10,7 @@ const User = require("./models/User.js");
 var app = express();
 
 app.use(cors());
+app.options("*", cors());
 
 app.use("/static", express.static("static"));
 app.use("/assets", express.static("assets"));
