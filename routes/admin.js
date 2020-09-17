@@ -173,6 +173,7 @@ router.get("/sessions/:sessionName/:type", async (req, res) => {
 
   if (adminSecret === process.env.ADMIN_SECRET) {
     try {
+      console.log("Retrieving reports");
       const users = await User.find({
         environment: process.env.NODE_ENV,
         subject: req.params.sessionName,
